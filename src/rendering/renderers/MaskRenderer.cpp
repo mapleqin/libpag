@@ -42,7 +42,9 @@ static void ExpandPath(tgfx::Path* path, float expansion) {
     return;
   }
   auto strokePath = *path;
-  auto effect = tgfx::PathEffect::MakeStroke(tgfx::Stroke(fabsf(expansion) * 2));
+  auto effect = tgfx::PathEffect::MakeStroke(tgfx::Stroke(fabsf(expansion) * 2,
+                                                          tgfx::LineCap::Butt,
+                                                          tgfx::LineJoin::Round));
   if (effect) {
     effect->applyTo(&strokePath);
   }
