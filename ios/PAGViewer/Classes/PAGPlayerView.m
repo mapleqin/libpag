@@ -40,21 +40,21 @@
     pagPath = [[NSBundle mainBundle] pathForResource:fileName ofType:extension];
     PAGFile* pagFile = [PAGFile Load:pagPath];
 
-    if ([pagFile numTexts] > 0) {
-        PAGText* textData = [pagFile getTextData:0];
-        textData.text = @"hah哈 哈哈哈哈👌하";
-        [pagFile replaceText:0 data:textData];
-    }
-
-    if ([pagFile numImages] > 0) {
-        NSString* filePath = [[NSBundle mainBundle] pathForResource:@"rotation" ofType:@"jpg"];
-//        CVPixelBufferRef pixelBuffer = [self pixelBufferFromPath:filePath];
-//        PAGImage* pagImage = [PAGImage FromPixelBuffer:pixelBuffer];
-        PAGImage* pagImage = [PAGImage FromPath:filePath];
-        if (pagImage) {
-            [pagFile replaceImage:0 data:pagImage];
-        }
-    }
+//    if ([pagFile numTexts] > 0) {
+//        PAGText* textData = [pagFile getTextData:0];
+//        textData.text = @"hah哈 哈哈哈哈👌하";
+//        [pagFile replaceText:0 data:textData];
+//    }
+//
+//    if ([pagFile numImages] > 0) {
+//        NSString* filePath = [[NSBundle mainBundle] pathForResource:@"rotation" ofType:@"jpg"];
+////        CVPixelBufferRef pixelBuffer = [self pixelBufferFromPath:filePath];
+////        PAGImage* pagImage = [PAGImage FromPixelBuffer:pixelBuffer];
+//        PAGImage* pagImage = [PAGImage FromPath:filePath];
+//        if (pagImage) {
+//            [pagFile replaceImage:0 data:pagImage];
+//        }
+//    }
 
     [pagView setComposition:pagFile];
 }

@@ -19,6 +19,7 @@
 		4DE99A5127BFC16F0003AA0A /* PAGPlayerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DE99A4927BFC16F0003AA0A /* PAGPlayerView.m */; };
 		4DE99A5227BFC16F0003AA0A /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DE99A4C27BFC16F0003AA0A /* ViewController.mm */; };
 		4DE99A5327BFC16F0003AA0A /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DE99A4C27BFC16F0003AA0A /* ViewController.mm */; };
+		5449299728508AA700EE1D6F /* MASK.pag in Resources */ = {isa = PBXBuildFile; fileRef = 5449299628508AA700EE1D6F /* MASK.pag */; };
 		545B97E9278F115300A0112E /* RootLayerBitmapOffset.pag in Resources */ = {isa = PBXBuildFile; fileRef = 545B97A7278F115000A0112E /* RootLayerBitmapOffset.pag */; };
 		545B97EB278F115300A0112E /* Bulge-unpin-s.pag in Resources */ = {isa = PBXBuildFile; fileRef = 545B97A8278F115000A0112E /* Bulge-unpin-s.pag */; };
 		545B97ED278F115300A0112E /* scene.png in Resources */ = {isa = PBXBuildFile; fileRef = 545B97A9278F115100A0112E /* scene.png */; };
@@ -117,6 +118,7 @@
 		4DE99A4C27BFC16F0003AA0A /* ViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ViewController.mm; sourceTree = "<group>"; };
 		4DE99A4D27BFC16F0003AA0A /* PAGPlayerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PAGPlayerView.h; sourceTree = "<group>"; };
 		52E388B434A077E5A9820A34 /* Pods-PAGViewer.dailybuild.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PAGViewer.dailybuild.xcconfig"; path = "Pods/Target Support Files/Pods-PAGViewer/Pods-PAGViewer.dailybuild.xcconfig"; sourceTree = "<group>"; };
+		5449299628508AA700EE1D6F /* MASK.pag */ = {isa = PBXFileReference; lastKnownFileType = file; name = MASK.pag; path = ../../assets/MASK.pag; sourceTree = "<group>"; };
 		545B97A7278F115000A0112E /* RootLayerBitmapOffset.pag */ = {isa = PBXFileReference; lastKnownFileType = file; name = RootLayerBitmapOffset.pag; path = ../../assets/RootLayerBitmapOffset.pag; sourceTree = "<group>"; };
 		545B97A8278F115000A0112E /* Bulge-unpin-s.pag */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Bulge-unpin-s.pag"; path = "../../assets/Bulge-unpin-s.pag"; sourceTree = "<group>"; };
 		545B97A9278F115100A0112E /* scene.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = scene.png; path = ../../assets/scene.png; sourceTree = "<group>"; };
@@ -260,6 +262,7 @@
 				545B97B6278F115100A0112E /* DropShadow.pag */,
 				545B97B3278F115100A0112E /* fans.pag */,
 				545B97CB278F115200A0112E /* game.mp4 */,
+				5449299628508AA700EE1D6F /* MASK.pag */,
 				545B97C8278F115200A0112E /* guide_hand_drag.pag */,
 				545B97B4278F115100A0112E /* jisha.pag */,
 				545B97C2278F115200A0112E /* like.pag */,
@@ -511,6 +514,7 @@
 				545B9859278F115400A0112E /* RootLayerVideoFreeze.pag in Resources */,
 				545B9805278F115400A0112E /* srgb.pag in Resources */,
 				F2ED88A91FCBEDF100555707 /* Main.storyboard in Resources */,
+				5449299728508AA700EE1D6F /* MASK.pag in Resources */,
 				545B97FF278F115400A0112E /* repeater.pag in Resources */,
 				545B9867278F115400A0112E /* TextPositionAnimator.pag in Resources */,
 				545B982D278F115400A0112E /* RootLayerBitmapFreeze.pag in Resources */,

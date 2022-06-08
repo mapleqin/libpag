@@ -57,8 +57,16 @@ LayerCache::LayerCache(Layer* layer) : layer(layer) {
   }
   contentCache->update();
   transformCache = new TransformCache(layer);
-  if (!layer->masks.empty()) {
+  auto hasFeatherMask = false;
+  for (auto mask : layer->masks) {
+    if (mask->maskFeather != nullptr) {
+      hasFeatherMask = true;
+    }
+  }
+  if (!layer->masks.empty() && !hasFeatherMask) {
     maskCache = new MaskCache(layer);
+  } else {
+    // todo
   }
   updateStaticTimeRanges();
   maxScaleFactor = ToTGFX(layer->getMaxScaleFactor());

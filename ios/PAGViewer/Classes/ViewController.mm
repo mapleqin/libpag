@@ -36,7 +36,7 @@
     
     UIViewController *vc1 = [[UIViewController alloc] init];
     UITabBarItem *item1 = [[UITabBarItem alloc] init];
-    item1.title = @"alpha.pag";
+    item1.title = @"MASK.pag";
     [item1 setTitleTextAttributes:@{NSFontAttributeName:[UIFont systemFontOfSize:30]} forState:UIControlStateNormal];
     vc1.tabBarItem = item1;
     
@@ -47,7 +47,7 @@
     
     UIViewController *vc2 = [[UIViewController alloc] init];
     UITabBarItem *item2 = [[UITabBarItem alloc] init];
-    item2.title = @"particle_video.pag";
+    item2.title = @"MASK.pag";
     item2.image = [UIImage imageNamed:@"ffmpeg"];
     [item2 setTitleTextAttributes:@{NSFontAttributeName:[UIFont systemFontOfSize:30]} forState:UIControlStateNormal];
     vc2.tabBarItem = item2;

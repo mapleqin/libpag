@@ -42,6 +42,7 @@ enum class GraphicType {
   Shape,
   Text,
   Compose,
+  FeatherMask,
 };
 
 class Modifier;
