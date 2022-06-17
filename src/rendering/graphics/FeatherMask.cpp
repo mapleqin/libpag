@@ -52,18 +52,26 @@ void FeatherMask::prepare(RenderCache*) const {
 }
   
 tgfx::Rect MeasureFeatherMaskBounds(const std::vector<MaskData*>& masks, Frame layerFrame) {
-  tgfx::Rect maxBounds = tgfx::Rect::MakeWH(0.0, 0.0);
+  float maxRight = 0.0;
+  float maxBottom = 0.0;
   for (auto mask : masks) {
     auto maskPath = ToPath(*(mask->maskPath->getValueAt(layerFrame)));
     auto bounds = maskPath.getBounds();
-//    if ()
-//  }
+    if (bounds.right > maxRight) {
+      maxRight = bounds.right;
+    }
+    if (bounds.bottom > maxBottom) {
+      maxBottom = bounds.bottom;
+    }
+  }
+  return tgfx::Rect::MakeLTRB(0, 0, maxRight, maxBottom);
 }
 
 std::unique_ptr<Snapshot> DrawFeatherMask(const std::vector<MaskData*>& masks, Frame layerFrame,
                                           RenderCache* cache, float scaleFactor) {
   bool isFirst = true;
-  auto surface = tgfx::Surface::Make(cache->getContext(), 1.0, 1.0);
+  auto bounds = MeasureFeatherMaskBounds(masks, layerFrame);
+  auto surface = tgfx::Surface::Make(cache->getContext(), bounds.width(), bounds.height());
   auto canvas = surface->getCanvas();
   auto totalMatrix = canvas->getMatrix();
   if (surface == nullptr) {
