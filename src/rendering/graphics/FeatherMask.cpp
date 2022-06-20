@@ -24,6 +24,8 @@
 #include "tgfx/gpu/Canvas.h"
 #include "tgfx/gpu/Surface.h"
 
+#define FEATHER_MASK_EXPEND 30
+
 namespace pag {
 std::shared_ptr<Graphic> FeatherMask::MakeFrom(ID assetID, const std::vector<MaskData*>& masks,
                                                Frame layerFrame) {
@@ -70,8 +72,11 @@ tgfx::Rect MeasureFeatherMaskBounds(const std::vector<MaskData*>& masks, Frame l
 std::unique_ptr<Snapshot> DrawFeatherMask(const std::vector<MaskData*>& masks, Frame layerFrame,
                                           RenderCache* cache, float scaleFactor) {
   bool isFirst = true;
-  auto bounds = MeasureFeatherMaskBounds(masks, layerFrame);
-  auto surface = tgfx::Surface::Make(cache->getContext(), bounds.width(), bounds.height());
+  auto totalBounds = MeasureFeatherMaskBounds(masks, layerFrame);
+  totalBounds.outset(FEATHER_MASK_EXPEND, FEATHER_MASK_EXPEND);
+  auto surface = tgfx::Surface::Make(cache->getContext(),
+                                     static_cast<int>(ceilf(totalBounds.width() * scaleFactor)),
+                                     static_cast<int>(ceilf(totalBounds.height() * scaleFactor)));
   auto canvas = surface->getCanvas();
   auto totalMatrix = canvas->getMatrix();
   if (surface == nullptr) {
@@ -100,12 +105,7 @@ std::unique_ptr<Snapshot> DrawFeatherMask(const std::vector<MaskData*>& masks, F
     
     if (isFirst) {
       isFirst = false;
-      *maskContent = maskPath;
-    } else {
-      maskContent->addPath(maskPath, ToPathOp(mask->maskMode));
     }
-
-
   }
   auto bounds = path.getBounds();
   auto width = static_cast<int>(ceilf(bounds.width() * scaleFactor));
