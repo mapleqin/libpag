@@ -17,7 +17,8 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "LayerCache.h"
-#include "base/utils/TGFXCast.h"
+#include "base/utils/UniqueID.h"
+#include "rendering/graphics/FeatherMask.h"
 #include "rendering/caches/ImageContentCache.h"
 #include "rendering/caches/PreComposeContentCache.h"
 #include "rendering/caches/ShapeContentCache.h"
@@ -61,12 +62,11 @@ LayerCache::LayerCache(Layer* layer) : layer(layer) {
   for (auto mask : layer->masks) {
     if (mask->maskFeather != nullptr) {
       hasFeatherMask = true;
+      featherMaskID = UniqueID::Next();
     }
   }
   if (!layer->masks.empty() && !hasFeatherMask) {
     maskCache = new MaskCache(layer);
-  } else {
-    // todo
   }
   updateStaticTimeRanges();
   maxScaleFactor = ToTGFX(layer->getMaxScaleFactor());
@@ -88,6 +88,14 @@ tgfx::Path* LayerCache::getMasks(Frame contentFrame) {
     return nullptr;
   }
   return mask;
+}
+
+std::shared_ptr<Modifier> LayerCache::getFeatherMask(Frame contentFrame) {
+  if (featherMaskID == 0) {
+    return nullptr;
+  }
+  auto featherMask = FeatherMask::MakeFrom(featherMaskID, layer->masks, contentFrame);
+  return Modifier::MakeMask(featherMask, false);
 }
 
 Content* LayerCache::getContent(Frame contentFrame) {

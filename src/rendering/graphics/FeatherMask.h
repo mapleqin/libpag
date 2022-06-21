@@ -46,10 +46,15 @@ class FeatherMask : public Graphic {
   FeatherMask(ID assetID, const std::vector<MaskData*>& masks, Frame layerFrame);
 
   std::unique_ptr<Snapshot> makeSnapshot(RenderCache* cache, float scaleFactor) const;
+  
+  std::unique_ptr<Snapshot> DrawFeatherMask(const std::vector<MaskData*>& masks, Frame layerFrame,
+                                            RenderCache* cache, float scaleFactor) const;
 
   ID assetID = 0;
   std::vector<MaskData*> masks;
   Frame layerFrame;
+  
+  tgfx::Rect bounds;
 
   friend class RenderCache;
 };

@@ -20,11 +20,11 @@
 #include "pag/file.h"
 #include "rendering/caches/RenderCache.h"
 #include "rendering/utils/PathUtil.h"
+#include "rendering/filters/gaussianblur/GaussianBlurFilter.h"
 #include "tgfx/core/Mask.h"
 #include "tgfx/gpu/Canvas.h"
 #include "tgfx/gpu/Surface.h"
-
-#define FEATHER_MASK_EXPEND 30
+#include "Trace.h"
 
 namespace pag {
 std::shared_ptr<Graphic> FeatherMask::MakeFrom(ID assetID, const std::vector<MaskData*>& masks,
@@ -35,24 +35,6 @@ std::shared_ptr<Graphic> FeatherMask::MakeFrom(ID assetID, const std::vector<Mas
   return std::shared_ptr<Graphic>(new FeatherMask(assetID, masks, layerFrame));
 }
 
-FeatherMask::FeatherMask(ID assetID, const std::vector<MaskData*>& masks, Frame layerFrame)
-    : assetID(assetID), masks(masks), layerFrame(layerFrame) {
-}
-
-void FeatherMask::measureBounds(tgfx::Rect*) const {
-}
-
-bool FeatherMask::hitTest(RenderCache*, float, float) {
-  return true;
-}
-
-bool FeatherMask::getPath(tgfx::Path*) const {
-  return false;
-}
-
-void FeatherMask::prepare(RenderCache*) const {
-}
-  
 tgfx::Rect MeasureFeatherMaskBounds(const std::vector<MaskData*>& masks, Frame layerFrame) {
   float maxRight = 0.0;
   float maxBottom = 0.0;
@@ -69,19 +51,57 @@ tgfx::Rect MeasureFeatherMaskBounds(const std::vector<MaskData*>& masks, Frame l
   return tgfx::Rect::MakeLTRB(0, 0, maxRight, maxBottom);
 }
 
-std::unique_ptr<Snapshot> DrawFeatherMask(const std::vector<MaskData*>& masks, Frame layerFrame,
-                                          RenderCache* cache, float scaleFactor) {
+FeatherMask::FeatherMask(ID assetID, const std::vector<MaskData*>& masks, Frame layerFrame)
+    : assetID(assetID), masks(std::move(masks)), layerFrame(layerFrame) {
+      bounds = MeasureFeatherMaskBounds(masks, layerFrame);
+}
+
+void FeatherMask::measureBounds(tgfx::Rect* rect) const {
+  *rect = bounds;
+}
+
+bool FeatherMask::hitTest(RenderCache*, float, float) {
+  return true;
+}
+
+bool FeatherMask::getPath(tgfx::Path*) const {
+  return false;
+}
+
+void FeatherMask::prepare(RenderCache*) const {
+}
+
+std::unique_ptr<Snapshot> FeatherMask::DrawFeatherMask(const std::vector<MaskData*>& masks,
+                                                       Frame layerFrame,
+                                                       RenderCache* cache, float scaleFactor) const {
   bool isFirst = true;
-  auto totalBounds = MeasureFeatherMaskBounds(masks, layerFrame);
-  totalBounds.outset(FEATHER_MASK_EXPEND, FEATHER_MASK_EXPEND);
+//  auto totalBounds = MeasureFeatherMaskBounds(masks, layerFrame);
+//  totalBounds.outset(static_cast<int>(ceilf(totalBounds.width() * BLUR_EXPEND)),
+//                     static_cast<int>(ceilf(totalBounds.height() * BLUR_EXPEND)));
   auto surface = tgfx::Surface::Make(cache->getContext(),
-                                     static_cast<int>(ceilf(totalBounds.width() * scaleFactor)),
-                                     static_cast<int>(ceilf(totalBounds.height() * scaleFactor)));
+                                     static_cast<int>(ceilf(bounds.width() * scaleFactor)),
+                                     static_cast<int>(ceilf(bounds.height() * scaleFactor)),
+                                     true);
   auto canvas = surface->getCanvas();
   auto totalMatrix = canvas->getMatrix();
   if (surface == nullptr) {
     return nullptr;
   }
+  tgfx::Paint paint;
+  auto effect = new FastBlurEffect();
+  effect->blurriness = new Property<float>;
+  effect->repeatEdgePixels = new Property<bool>;
+  effect->blurDimensions = new Property<Enum>;
+  effect->repeatEdgePixels->value = false;
+  effect->blurDimensions->value = BlurDimensionsDirection::All;
+  effect->blurriness->value = 70.0;
+  auto filter = new GaussianBlurFilter(effect);
+  if (!filter->initialize(cache->getContext())) {
+    delete effect;
+    delete filter;
+    return nullptr;
+  }
+  auto filterTarget = ToFilterTarget(surface.get(), totalMatrix);
   for (auto& mask : masks) {
     auto path = mask->maskPath->getValueAt(layerFrame);
     if (path == nullptr || !path->isClosed() || mask->maskMode == MaskMode::None) {
@@ -100,39 +120,34 @@ std::unique_ptr<Snapshot> DrawFeatherMask(const std::vector<MaskData*>& masks, F
       maskPath.toggleInverseFillType();
     }
     auto bounds = maskPath.getBounds();
-    auto width = static_cast<int>(ceilf(bounds.width() * scaleFactor));
-    auto height = static_cast<int>(ceilf(bounds.height() * scaleFactor));
-    
-    if (isFirst) {
-      isFirst = false;
-    }
+    auto width = static_cast<int>(ceilf(bounds.right * scaleFactor));
+    auto height = static_cast<int>(ceilf(bounds.bottom * scaleFactor));
+    auto maskSurface = tgfx::Surface::Make(cache->getContext(), width, height, true);
+    auto maskCanvas = maskSurface->getCanvas();
+    maskCanvas->drawPath(maskPath, paint);
+    auto maskTexture = maskSurface->getTexture();
+    Trace(maskTexture.get());
+    auto filterSource = ToFilterSource(maskTexture.get(), {1.0, 1.0});
+    filter->update(layerFrame, bounds, bounds, {1.0, 1.0});
+    filter->draw(cache->getContext(), filterSource.get(), filterTarget.get());
   }
-  auto bounds = path.getBounds();
-  auto width = static_cast<int>(ceilf(bounds.width() * scaleFactor));
-  auto height = static_cast<int>(ceilf(bounds.height() * scaleFactor));
-  auto mask = tgfx::Mask::Make(width, height);
-  if (mask == nullptr) {
+  
+  auto texture = surface->getTexture();
+  if (texture == nullptr) {
     return nullptr;
   }
   auto matrix = tgfx::Matrix::MakeScale(scaleFactor);
   matrix.preTranslate(-bounds.x(), -bounds.y());
-  mask->setMatrix(matrix);
-  mask->fillPath(path);
   auto drawingMatrix = tgfx::Matrix::I();
   matrix.invert(&drawingMatrix);
-  auto texture = mask->makeTexture(cache->getContext());
-  if (texture == nullptr) {
-    return nullptr;
-  }
   return std::make_unique<Snapshot>(texture, drawingMatrix);
-  return nullptr;
 }
-  
+
 void FeatherMask::draw(tgfx::Canvas* canvas, RenderCache* renderCache) const {
   tgfx::Paint paint;
   auto snapshot = renderCache->getSnapshot(assetID);
   if (!snapshot) {
-    snapshot = DrawFeatherMask(masks, layerFrame, renderCache, 1.0).get();
+    snapshot = DrawFeatherMask(masks, layerFrame, renderCache, 1.0).release();
   }
   canvas->drawTexture(snapshot->getTexture());
 }
