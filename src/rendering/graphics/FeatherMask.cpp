@@ -48,7 +48,7 @@ tgfx::Rect MeasureFeatherMaskBounds(const std::vector<MaskData*>& masks, Frame l
       maxBottom = bounds.bottom;
     }
   }
-  return tgfx::Rect::MakeLTRB(0, 0, maxRight, maxBottom);
+  return tgfx::Rect::MakeLTRB(0, 0, maxRight * (1.0 + BLUR_EXPEND), maxBottom * (1.0 + BLUR_EXPEND));
 }
 
 FeatherMask::FeatherMask(ID assetID, const std::vector<MaskData*>& masks, Frame layerFrame)
@@ -75,14 +75,12 @@ std::unique_ptr<Snapshot> FeatherMask::DrawFeatherMask(const std::vector<MaskDat
                                                        Frame layerFrame,
                                                        RenderCache* cache, float scaleFactor) const {
   bool isFirst = true;
-//  auto totalBounds = MeasureFeatherMaskBounds(masks, layerFrame);
-//  totalBounds.outset(static_cast<int>(ceilf(totalBounds.width() * BLUR_EXPEND)),
-//                     static_cast<int>(ceilf(totalBounds.height() * BLUR_EXPEND)));
   auto surface = tgfx::Surface::Make(cache->getContext(),
-                                     static_cast<int>(ceilf(bounds.width() * scaleFactor)),
-                                     static_cast<int>(ceilf(bounds.height() * scaleFactor)),
+                                     static_cast<int>(ceilf(bounds.right * scaleFactor)),
+                                     static_cast<int>(ceilf(bounds.bottom * scaleFactor)),
                                      true);
   auto canvas = surface->getCanvas();
+  canvas->setMatrix(tgfx::Matrix::MakeTrans(bounds.x(), bounds.y()));
   auto totalMatrix = canvas->getMatrix();
   if (surface == nullptr) {
     return nullptr;
@@ -101,7 +99,6 @@ std::unique_ptr<Snapshot> FeatherMask::DrawFeatherMask(const std::vector<MaskDat
     delete filter;
     return nullptr;
   }
-  auto filterTarget = ToFilterTarget(surface.get(), totalMatrix);
   for (auto& mask : masks) {
     auto path = mask->maskPath->getValueAt(layerFrame);
     if (path == nullptr || !path->isClosed() || mask->maskMode == MaskMode::None) {
@@ -119,17 +116,20 @@ std::unique_ptr<Snapshot> FeatherMask::DrawFeatherMask(const std::vector<MaskDat
     if (inverted) {
       maskPath.toggleInverseFillType();
     }
-    auto bounds = maskPath.getBounds();
-    auto width = static_cast<int>(ceilf(bounds.right * scaleFactor));
-    auto height = static_cast<int>(ceilf(bounds.bottom * scaleFactor));
+    auto maskBounds = maskPath.getBounds();
+    auto width = static_cast<int>(ceilf(maskBounds.width() * scaleFactor));
+    auto height = static_cast<int>(ceilf(maskBounds.height() * scaleFactor));
     auto maskSurface = tgfx::Surface::Make(cache->getContext(), width, height, true);
     auto maskCanvas = maskSurface->getCanvas();
+    maskCanvas->setMatrix(tgfx::Matrix::MakeTrans(-maskBounds.x(), -maskBounds.y()));
     maskCanvas->drawPath(maskPath, paint);
     auto maskTexture = maskSurface->getTexture();
-    Trace(maskTexture.get());
+//    Trace(maskTexture.get());
     auto filterSource = ToFilterSource(maskTexture.get(), {1.0, 1.0});
-    filter->update(layerFrame, bounds, bounds, {1.0, 1.0});
+    auto filterTarget = ToFilterTarget(surface.get(), tgfx::Matrix::MakeTrans(maskBounds.x(), maskBounds.y()));
+    filter->update(layerFrame, maskBounds, bounds, {1.0, 1.0});
     filter->draw(cache->getContext(), filterSource.get(), filterTarget.get());
+//    Trace(surface->getTexture().get());
   }
   
   auto texture = surface->getTexture();
@@ -137,9 +137,12 @@ std::unique_ptr<Snapshot> FeatherMask::DrawFeatherMask(const std::vector<MaskDat
     return nullptr;
   }
   auto matrix = tgfx::Matrix::MakeScale(scaleFactor);
-  matrix.preTranslate(-bounds.x(), -bounds.y());
+//  matrix.preTranslate(bounds.x(), bounds.y());
   auto drawingMatrix = tgfx::Matrix::I();
   matrix.invert(&drawingMatrix);
+  
+  delete effect;
+  
   return std::make_unique<Snapshot>(texture, drawingMatrix);
 }
 
