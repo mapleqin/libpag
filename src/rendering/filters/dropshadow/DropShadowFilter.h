@@ -20,7 +20,7 @@
 
 #include "DropShadowSpreadFilter.h"
 #include "rendering/filters/LayerFilter.h"
-#include "rendering/filters/gaussblur/SinglePassBlurFilter.h"
+#include "rendering/filters/gaussianblur/GaussianBlurFilter.h"
 #include "rendering/filters/utils/FilterBuffer.h"
 
 namespace pag {
@@ -43,8 +43,8 @@ class DropShadowFilter : public LayerFilter {
   std::shared_ptr<FilterBuffer> spreadFilterBuffer = nullptr;
   std::shared_ptr<FilterBuffer> blurFilterBuffer = nullptr;
 
-  SinglePassBlurFilter* blurFilterV = nullptr;
-  SinglePassBlurFilter* blurFilterH = nullptr;
+  FastBlurEffect* blurEffect = nullptr;
+  GaussianBlurFilter* blurFilter = nullptr;
   DropShadowSpreadFilter* spreadFilter = nullptr;
   DropShadowSpreadFilter* spreadThickFilter = nullptr;
 
