@@ -18,6 +18,7 @@
 
 #include "GaussianBlurFilter.h"
 #include "rendering/filters/utils/FilterHelper.h"
+#include "rendering/utils/Trace.h"
 
 namespace pag {
 GaussianBlurFilter::GaussianBlurFilter(Effect* effect) : effect(effect) {
@@ -173,6 +174,8 @@ void GaussianBlurFilter::draw(tgfx::Context* context, const FilterSource* source
 
   FilterSource* filterSource = const_cast<FilterSource*>(source);
   FilterTarget* filterTarget = nullptr;
+  
+  tgfx::Texture* ttt = nullptr;
 
   for (int i = 0; i < blurParam.depth; i++) {
     auto sourceBounds = filtersBounds[i].inputBounds;
@@ -230,9 +233,12 @@ void GaussianBlurFilter::draw(tgfx::Context* context, const FilterSource* source
     upBlurPass->updateParams(blurParam.value, blurParam.scale,
                              !blurParam.repeatEdgePixels && i == blurParam.depth);
     upBlurPass->draw(context, filterSource, filterTarget);
+    ttt = filterBuffer->surface->getTexture().get();
     if (i != blurParam.depth * 2 - 1) {
       filterSourcePtr = filterBuffer->toFilterSource(source->scale);
       filterSource = filterSourcePtr.get();
+    } else {
+      Trace(ttt);
     }
     if (filterBufferNeedToCache != nullptr) {
       cacheBuffer(filterBufferNeedToCache);

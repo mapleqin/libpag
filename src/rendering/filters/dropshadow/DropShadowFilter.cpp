@@ -197,32 +197,8 @@ void DropShadowFilter::onDrawModeNotFullSpread(tgfx::Context* context, const Fil
     spreadThickFilter->draw(context, source, targetSpread.get());
   }
 
-  auto sourceV = spreadFilterBuffer->toFilterSource(source->scale);
-  lastBounds = filterBounds;
-  filterBounds = filtersBounds[2];
-  targetWidth = static_cast<int>(ceilf(filterBounds.width() * source->scale.x));
-  targetHeight = static_cast<int>(ceilf(filterBounds.height() * source->scale.y));
-  if (blurFilterBuffer == nullptr || blurFilterBuffer->width() != targetWidth ||
-      blurFilterBuffer->height() != targetHeight) {
-    blurFilterBuffer = FilterBuffer::Make(context, targetWidth, targetHeight);
-  }
-  if (blurFilterBuffer == nullptr) {
-    return;
-  }
-  blurFilterBuffer->clearColor();
-  offsetMatrix = tgfx::Matrix::MakeTrans((lastBounds.left - filterBounds.left) * source->scale.x,
-                                         (lastBounds.top - filterBounds.top) * source->scale.y);
-  auto targetV = blurFilterBuffer->toFilterTarget(offsetMatrix);
-  blurFilterV->updateParams(blurSize, 1.0, false, BlurMode::Shadow);
-  blurFilterV->draw(context, sourceV.get(), targetV.get());
-
-  auto sourceH = blurFilterBuffer->toFilterSource(source->scale);
-  tgfx::Matrix revertMatrix =
-      tgfx::Matrix::MakeTrans((filterBounds.left - contentBounds.left) * source->scale.x,
-                              (filterBounds.top - contentBounds.top) * source->scale.y);
-  auto targetH = *target;
-  PreConcatMatrix(&targetH, revertMatrix);
-  blurFilterH->updateParams(blurSize, alpha, false, BlurMode::Shadow);
-  blurFilterH->draw(context, sourceH.get(), &targetH);
+  auto sourceSpread = spreadFilterBuffer->toFilterSource(source->scale);
+  blurEffect->blurriness->value = blurSize;
+  blurFilter->draw(context, sourceSpread.get(), target);
 }
 }  // namespace pag
